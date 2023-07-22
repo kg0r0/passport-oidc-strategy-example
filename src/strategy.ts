@@ -97,10 +97,9 @@ export class Strategy extends PassportStrategy {
     req.session.authParams.state = state;
     req.session.authParams.codeVerifier = codeVerifier;
     req.session.authParams.codeChallengeMethod = 'S256';
-    req.session.authParams.state = state;
     req.session.authParams.originalUrl = req.originalUrl;
     this.authParams = req.session.authParams
-    const url = this.client.authorizationUrl({
+    const authorizationUrl = this.client.authorizationUrl({
       response_type: 'code',
       scope,
       state,
@@ -108,7 +107,7 @@ export class Strategy extends PassportStrategy {
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
     })
-    return req.res?.redirect(url);
+    return req.res?.redirect(authorizationUrl);
   }
 
   success(user: any, info?: any): void {
