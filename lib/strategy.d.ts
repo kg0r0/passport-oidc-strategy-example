@@ -35,7 +35,7 @@ export declare class Strategy extends PassportStrategy {
     client_secret: string;
     redirect_uri: string;
     constructor(options: StrategyOptions);
-    authenticate(req: Request, options: AuthenticateOptions): Promise<void>;
+    authenticate(req: Request, options: AuthenticateOptions): void;
     success(user: any, info?: any): void;
     error(err: Error): void;
     redirect(url: string, status?: number): void;

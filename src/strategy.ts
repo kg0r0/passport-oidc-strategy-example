@@ -49,65 +49,69 @@ export class Strategy extends PassportStrategy {
     this.url = options.url;
   }
 
-  async authenticate(req: Request, options: AuthenticateOptions): Promise<void> {
-    if (!this.issuer) {
-      this.issuer = await Issuer.discover(this.url)
-    }
-    this.client = new this.issuer.Client({
-      client_id: this.client_id,
-      client_secret: this.client_secret,
-      redirect_uris: [this.redirect_uri],
-      response_types: ['code']
-    })
-    if (!req.session) {
-      throw new Error('express-session is not configured')
-    }
+  authenticate(req: Request, options: AuthenticateOptions): void {
+    (async () => {
+      if (!this.issuer) {
+        this.issuer = await Issuer.discover(this.url)
+      }
+      this.client = new this.issuer.Client({
+        client_id: this.client_id,
+        client_secret: this.client_secret,
+        redirect_uris: [this.redirect_uri],
+        response_types: ['code']
+      })
+      if (!req.session) {
+        throw new Error('express-session is not configured')
+      }
 
-    if (req.session.isLoggedIn) {
-      this.pass();
-      return
-    }
+      if (req.session.isLoggedIn) {
+        this.pass();
+        return
+      }
 
-    if (req.query.code && req.session.authParams) {
-      const state = req.session.authParams.state;
-      const codeVerifier = req.session.authParams.codeVerifier;
-      const nonce = req.session.authParams.nonce;
-      const params = this.client.callbackParams(req);
-      const tokenSet = await this.client.callback(
-        this.redirect_uri,
-        params,
-        {
-          state,
-          nonce,
-          code_verifier: codeVerifier
-        }
-      )
-      req.session.tokenSet = tokenSet;
-      req.session.isLoggedIn = true;
-      return req.res?.redirect(req.session.authParams.originalUrl!);
-    }
-    const scope = 'openid'
-    const nonce = generators.nonce();
-    const state = generators.state();
-    const codeVerifier = generators.codeVerifier();
-    const codeChallenge = generators.codeChallenge(codeVerifier);
-    req.session.authParams = {};
-    req.session.authParams.scope = scope;
-    req.session.authParams.nonce = nonce;
-    req.session.authParams.state = state;
-    req.session.authParams.codeVerifier = codeVerifier;
-    req.session.authParams.codeChallengeMethod = 'S256';
-    req.session.authParams.originalUrl = req.originalUrl;
-    this.authParams = req.session.authParams
-    const authorizationUrl = this.client.authorizationUrl({
-      response_type: 'code',
-      scope,
-      state,
-      nonce,
-      code_challenge: codeChallenge,
-      code_challenge_method: 'S256',
-    })
-    return req.res?.redirect(authorizationUrl);
+      if (req.query.code && req.session.authParams) {
+        const state = req.session.authParams.state;
+        const codeVerifier = req.session.authParams.codeVerifier;
+        const nonce = req.session.authParams.nonce;
+        const params = this.client.callbackParams(req);
+        const tokenSet = await this.client.callback(
+          this.redirect_uri,
+          params,
+          {
+            state,
+            nonce,
+            code_verifier: codeVerifier
+          }
+        )
+        req.session.tokenSet = tokenSet;
+        req.session.isLoggedIn = true;
+        return req.res?.redirect(req.session.authParams.originalUrl!);
+      }
+      const scope = 'openid'
+      const nonce = generators.nonce();
+      const state = generators.state();
+      const codeVerifier = generators.codeVerifier();
+      const codeChallenge = generators.codeChallenge(codeVerifier);
+      req.session.authParams = {};
+      req.session.authParams.scope = scope;
+      req.session.authParams.nonce = nonce;
+      req.session.authParams.state = state;
+      req.session.authParams.codeVerifier = codeVerifier;
+      req.session.authParams.codeChallengeMethod = 'S256';
+      req.session.authParams.originalUrl = req.originalUrl;
+      this.authParams = req.session.authParams
+      const authorizationUrl = this.client.authorizationUrl({
+        response_type: 'code',
+        scope,
+        state,
+        nonce,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
+      })
+      return req.res?.redirect(authorizationUrl);
+    })().catch((err) => {
+      this.fail(err);
+    });
   }
 
   success(user: any, info?: any): void {
