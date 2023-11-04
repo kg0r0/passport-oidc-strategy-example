@@ -5,3 +5,4 @@
 - https://github.com/kg0r0/passport-strategy-example#readme
 - https://github.com/jaredhanson/passport-strategy#readme
 - https://www.passportjs.org
+- https://github.com/panva/node-openid-client/blob/main/lib/passport_strategy.js
