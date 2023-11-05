@@ -6,8 +6,8 @@ import { Strategy as ExampleStrategy } from '../../lib';
 const app: express.Express = express()
 
 passport.use(new ExampleStrategy({
-  client_id: '<CLIENT_ID>',
-  client_secret: '<CLIENT_SECRET>',
+  client_id: process.env.CLIENT_ID || '<CLIENT_ID>',
+  client_secret: process.env.CLIENT_SECRET || '<CLIENT_SECRET>',
   url: 'https://accounts.google.com/.well-known/openid-configuration',
   redirect_uri: 'http://localhost:3000/cb',
 }));
