@@ -5,12 +5,11 @@ import crypto from 'crypto';
 import { Strategy as ExampleStrategy } from '../../lib';
 const app: express.Express = express()
 
-passport.use(new ExampleStrategy({
-  client_id: process.env.CLIENT_ID || '<CLIENT_ID>',
-  client_secret: process.env.CLIENT_SECRET || '<CLIENT_SECRET>',
-  url: 'https://accounts.google.com/.well-known/openid-configuration',
-  redirect_uri: 'http://localhost:3000/cb',
-}));
+declare module 'express-session' {
+  export interface SessionData {
+    passport: any;
+  }
+}
 
 app.use(session({
   name: 'session',
@@ -19,13 +18,31 @@ app.use(session({
   saveUninitialized: true
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((obj, done) => {
+  done(null, false);
+});
+
+passport.use(new ExampleStrategy({
+  client_id: process.env.CLIENT_ID || '<CLIENT_ID>',
+  client_secret: process.env.CLIENT_SECRET || '<CLIENT_SECRET>',
+  url: 'https://accounts.google.com/.well-known/openid-configuration',
+  redirect_uri: 'http://localhost:3000/cb',
+}));
+
 /**
  * routes
  */
 app.get('/*',
   passport.authenticate('example', {}),
   (req: express.Request, res: express.Response) => {
-    res.send('OK');
+    res.send(`Result: ${JSON.stringify(req.session.passport)}`);
+    return
   }
 );
 

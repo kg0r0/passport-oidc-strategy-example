@@ -64,9 +64,9 @@ export class Strategy extends PassportStrategy {
         throw new Error('express-session is not configured')
       }
 
-      if (req.session.isLoggedIn) {
-        this.pass();
-        return
+      if (req.session.isLoggedIn && req.session.tokenSet) {
+        return this.success(req.session.tokenSet, {});
+        //return this.pass();
       }
 
       if (req.query.code && req.session.authParams) {
@@ -85,7 +85,8 @@ export class Strategy extends PassportStrategy {
         )
         req.session.tokenSet = tokenSet;
         req.session.isLoggedIn = true;
-        return req.res?.redirect(req.session.authParams.originalUrl!);
+        this.redirect(req.session.authParams.originalUrl!);
+        return
       }
       const scope = 'openid'
       const nonce = generators.nonce();
@@ -108,25 +109,11 @@ export class Strategy extends PassportStrategy {
         code_challenge: codeChallenge,
         code_challenge_method: 'S256',
       })
-      return req.res?.redirect(authorizationUrl);
+      this.redirect(authorizationUrl);
+      return
     })().catch((err) => {
-      this.fail(err);
+      this.fail(500);
+      return
     });
-  }
-
-  success(user: any, info?: any): void {
-    super.success(user, info);
-  }
-
-  error(err: Error): void {
-    super.error(err);
-  }
-
-  redirect(url: string, status?: number): void {
-    super.redirect(url, status);
-  }
-
-  verify(): void {
-
   }
 }
