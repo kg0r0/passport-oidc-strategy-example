@@ -28,16 +28,13 @@ export interface StrategyOptions {
 export declare class Strategy extends PassportStrategy {
     name: string;
     authParams: AuthParams;
-    client?: Client;
+    client: Client;
     issuer?: Issuer;
     url: string;
     client_id: string;
     client_secret: string;
     redirect_uri: string;
-    constructor(options: StrategyOptions);
+    verify: Function;
+    constructor(options: StrategyOptions, verify: Function);
     authenticate(req: Request, options: AuthenticateOptions): void;
-    success(user: any, info?: any): void;
-    error(err: Error): void;
-    redirect(url: string, status?: number): void;
-    verify(): void;
 }
